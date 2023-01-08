@@ -149,7 +149,7 @@ end
 local function export(tree, filename, title)
     local exp = ImgExporter.new(20, 20, title)
     exp:line(0, 0, 20, 20)
-    exp:write(filename) 
+    exp:write("./output/"..filename) 
 end
 
 local tree = create_region(0, 0, WIDTH, HEIGH)
