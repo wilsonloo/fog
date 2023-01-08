@@ -1,4 +1,7 @@
+package.cpath = package.cpath .. ";./build/?.so"
+
 local PrintR = require "lib.print_r"
+local ImgExporter = require "3rd/imgexporter/exporter"
 
 local mfloor = math.floor
 local mmax = math.max
@@ -143,10 +146,17 @@ function mt:add(x, y, w, h)
     end
 end
 
+local function export(tree, filename, title)
+    local exp = ImgExporter.new(20, 20, title)
+    exp:line(0, 0, 20, 20)
+    exp:write(filename) 
+end
+
 local tree = create_region(0, 0, WIDTH, HEIGH)
 
-for _, v in ipairs(map) do
+for k, v in ipairs(map) do
     tree:add(v.x, v.y, v.w, v.h)
+    export(tree, k..".bson", "title:"..k)
     break
 end
 
