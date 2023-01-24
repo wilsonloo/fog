@@ -1,26 +1,24 @@
 package.cpath = package.cpath .. ";./build/?.so"
-
 local PrintR = require "lib.print_r"
-local ImgExporter = require "3rd/imgexporter/exporter"
 
 local mfloor = math.floor
 local mmax = math.max
 local mmin = math.min
 local tinsert = table.insert
 
-local a = {x=10, y=60, w=10, h=10}
-local b = {x=20, y=10, w=10, h=70}
-local c = {x=30, y=60, w=10, h=10}
-local d = {x=30, y=20, w=10, h=30}
-local e = {x=40, y=30, w=10, h=10}
-local i = {x=30, y=90, w=20, h=10}
-local j = {x=60, y=120, w=20, h=10}
+local a = {x=100, y=600, w=100, h=100}
+local b = {x=200, y=100, w=100, h=700}
+local c = {x=300, y=600, w=100, h=100}
+local d = {x=300, y=200, w=100, h=300}
+local e = {x=400, y=300, w=100, h=100}
+local i = {x=300, y=900, w=200, h=100}
+local j = {x=600, y=1200, w=200, h=100}
 
 local test = {x=10, y=10, w=10, h=10}
 local map = {a, b, c, d, e, i, j}
 
-local WIDTH = 200
-local HEIGH = 200
+local WIDTH = 2000
+local HEIGH = 2000
 
 -- 每个节点最多容纳多少个矩形
 local NODE_CAPACITY = 2
@@ -129,7 +127,7 @@ function mt:add(x, y, w, h)
     if x >= self.x and x <= mid_x then
         if y >= mid_y and y <= ny then
             -- 左上角
-            local region = self:fetch_region(LU, self.x, mid_y, mid_x, self.y)
+            local region = self:fetch_region(LU, self.x, mid_y, mid_x, ny)
             local tempx = x
             local tempy = mmax(y, mid_y)
             local tempw = mmin(tempx+w, mid_x)-tempx
@@ -148,41 +146,12 @@ function mt:add(x, y, w, h)
     end
 end
 
-local function export(tree, filename, title)
-    local width = tree.w
-    local heigh = tree.h
-    local function do_export(node, exp)
-        if node.list then
-            for _, e in ipairs(node.list) do
-                local x = e.x
-                local y = heigh - (e.y + e.h)
-                local w = e.w
-                local h = e.h
-                exp:rect(x, y, w, h)
-            end
-        end
-
-        if node.children then
-            for _, rname in ipairs(REGION_IDX_LIST) do
-                if node.children[rname] then
-                    do_export(node.children[rname], exp)
-                end
-            end
-        end
-    end
-
-    local exp = ImgExporter.new(width, heigh, title)
-    exp:rect(1, 1, width-2, heigh-2)
-    do_export(tree, exp)
-    exp:write("./output/"..filename) 
-end
-
 local tree = create_region(0, 0, WIDTH, HEIGH)
-
 for k, v in ipairs(map) do
     tree:add(v.x, v.y, v.w, v.h)
 end
 
 PrintR.print_r(tree)
+local export = require "export"
 export(tree, "map.json", "title")
 print("Done.")
