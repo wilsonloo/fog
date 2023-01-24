@@ -8,17 +8,19 @@ local mmax = math.max
 local mmin = math.min
 local tinsert = table.insert
 
-local a = {x=1, y=6, w=1, h=1}
-local b = {x=2, y=1, w=1, h=7}
-local c = {x=3, y=6, w=1, h=1}
-local d = {x=3, y=2, w=1, h=3}
-local e = {x=4, y=3, w=1, h=1}
-local i = {x=3, y=9, w=2, h=1}
-local j = {x=6, y=12, w=2, h=1}
-local map = { a, b, c, d, e, i, j}
+local a = {x=10, y=60, w=10, h=10}
+local b = {x=20, y=10, w=10, h=70}
+local c = {x=30, y=60, w=10, h=10}
+local d = {x=30, y=20, w=10, h=30}
+local e = {x=40, y=30, w=10, h=10}
+local i = {x=30, y=90, w=20, h=10}
+local j = {x=60, y=120, w=20, h=10}
 
-local WIDTH = 20
-local HEIGH = 20
+local test = {x=10, y=10, w=10, h=10}
+local map = {a, b, c, d, e, i, j}
+
+local WIDTH = 200
+local HEIGH = 200
 
 -- 每个节点最多容纳多少个矩形
 local NODE_CAPACITY = 2
@@ -147,8 +149,31 @@ function mt:add(x, y, w, h)
 end
 
 local function export(tree, filename, title)
-    local exp = ImgExporter.new(20, 20, title)
-    exp:line(0, 0, 20, 20)
+    local width = tree.w
+    local heigh = tree.h
+    local function do_export(node, exp)
+        if node.list then
+            for _, e in ipairs(node.list) do
+                local x = e.x
+                local y = heigh - (e.y + e.h)
+                local w = e.w
+                local h = e.h
+                exp:rect(x, y, w, h)
+            end
+        end
+
+        if node.children then
+            for _, rname in ipairs(REGION_IDX_LIST) do
+                if node.children[rname] then
+                    do_export(node.children[rname], exp)
+                end
+            end
+        end
+    end
+
+    local exp = ImgExporter.new(width, heigh, title)
+    exp:rect(1, 1, width-2, heigh-2)
+    do_export(tree, exp)
     exp:write("./output/"..filename) 
 end
 
@@ -156,9 +181,8 @@ local tree = create_region(0, 0, WIDTH, HEIGH)
 
 for k, v in ipairs(map) do
     tree:add(v.x, v.y, v.w, v.h)
-    export(tree, k..".bson", "title:"..k)
-    break
 end
 
 PrintR.print_r(tree)
+export(tree, "map.json", "title")
 print("Done.")
