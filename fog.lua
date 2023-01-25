@@ -1,5 +1,6 @@
 package.cpath = package.cpath .. ";./build/?.so"
 local PrintR = require "lib.print_r"
+local export = require "export"
 
 local mfloor = math.floor
 local mmax = math.max
@@ -146,12 +147,19 @@ function mt:add(x, y, w, h)
     end
 end
 
+img_idx = 1
+local function do_export(tree)
+    export(tree, img_idx..".json", "title")
+    img_idx = img_idx + 1
+end
+
 local tree = create_region(0, 0, WIDTH, HEIGH)
 for k, v in ipairs(map) do
     tree:add(v.x, v.y, v.w, v.h)
+    do_export(tree)
+
+    
 end
 
 PrintR.print_r(tree)
-local export = require "export"
-export(tree, "map.json", "title")
 print("Done.")
