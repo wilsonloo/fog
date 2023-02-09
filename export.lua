@@ -9,7 +9,11 @@ return function (tree, filename, title)
         local y = heigh - (r.y + r.h)
         local w = r.w
         local h = r.h
-        exp:rect(Def.COLOR_RED, x, y, w, h)
+        if r.full then
+            exp:rect_color(Def.COLOR_GREEN, x, y, w, h, r.id)
+        else
+            exp:rect_color(Def.COLOR_RED, x, y, w, h, r.id)
+        end
     end
     local function do_export(node, exp)
         if node.list then
@@ -18,7 +22,7 @@ return function (tree, filename, title)
                 local y = heigh - (e.y + e.h)
                 local w = e.w
                 local h = e.h
-                exp:rect(x, y, w, h)
+                exp:rect(x, y, w, h, e.id)
             end
         end
 
