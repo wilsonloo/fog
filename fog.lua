@@ -1,6 +1,7 @@
 package.cpath = package.cpath .. ";./build/?.so"
 local PrintR = require "lib.print_r"
 local Logger = require "lib.logger"
+local Export = require "export"
 local Def = require "def"
 local RU, RD, LU, LD = Def.RU, Def.RD, Def.LU, Def.LD
 
@@ -13,24 +14,23 @@ local tremove = table.remove
 -- 每个节点最多容纳多少个矩形
 local NODE_CAPACITY = 2
 
-local img_idx = 1
-local function do_export(tree)
-    local root = nil
-    local v = tree
-    while v ~= nil do
-        if v.is_root then
-            root = v
-            break
-        end
-        v = v.parent
-    end
-
-    local export = require "export"
-    export(root, img_idx..".json", "title")
-    img_idx = img_idx + 1
-end
-
 local logger = Logger.new()
+
+local function is_node_contained(node, x, y, w, h)
+    if x >= node.x + node.w then
+        return false
+    end
+    if x + w <= node.x then
+        return false
+    end
+    if y >= node.y + node.h then
+        return false
+    end
+    if y + h <= node.y then
+        return false
+    end
+    return true
+end
 
 local mt = {}
 mt.__index = mt
@@ -113,7 +113,7 @@ function mt:split_region()
     end
     logger:debug("spliting region done")
 
-    do_export(self)
+    Export.dump_tree(self)
 end
 
 function mt:_insert_region(x, y, w, h, id)
@@ -221,19 +221,7 @@ function mt:check_full()
 end
 
 function mt:is_contained(x, y, w, h)
-    if x >= self.x + self.w then
-        return false
-    end
-    if x + w <= self.x then
-        return false
-    end
-    if y >= self.y + self.h then
-        return false
-    end
-    if y + h <= self.y then
-        return false
-    end
-    return true
+    return is_node_contained(self, x, y, w, h)
 end
 
 function mt:add(x, y, w, h, id)
@@ -327,9 +315,36 @@ function mt:add_rects(list)
         self:add(v.x, v.y, v.w, v.h, v.id)
 
         if self.export_debug_img then
-            do_export(self)
+            Export.dump_tree(self)
         end
     end
+end
+
+function mt:check_collision(x, y, w, h)
+    if not self:is_contained(x, y, w, h) then
+        return false
+    end
+
+    if self.full then
+        return true
+    end
+
+    if self.list then
+        for _, v in ipairs(self.list) do
+            if is_node_contained(v, x, y, w, h) then
+                return true
+            end
+        end
+    end
+
+    if self.children then
+        for _, r in pairs(self.children) do
+            if r:check_collision(x, y, w, h) then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 local M = {}

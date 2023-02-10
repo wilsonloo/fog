@@ -1,6 +1,8 @@
-local Fog = require "fog"
 local PrintR = require "lib.print_r"
 local Args = require "lib.args"
+local Fog = require "fog"
+local Def = require "def"
+local sformat = string.format
 
 local args = Args.parse(...)
 PrintR.print_r("args:", args)
@@ -44,6 +46,46 @@ tree:add_rects{
     {id="u", x=400, y=200, w=100, h=50},
     {id="t", x=300, y=0, w=200, h=200},
 }
-
 PrintR.print_r(tree)
+
+-- 测试查找
+local exp
+if args['-e'] then
+    local Export = require "export"
+    exp = Export.export(tree, "test_find_")
+end
+
+local function test_find_rect(v)
+    x = v.x
+    y = v.y
+    w = v.w
+    h = v.h
+    id = v.id
+    if tree:check_collision(x, y, w, h) then
+        print(sformat("<x:%d, y:%d, w:%d, h:%d>", x, y, w, h), "collied")
+        id = id .."-1"
+    else
+        print(sformat("<x:%d, y:%d, w:%d, h:%d>", x, y, w, h), "free")
+        id = id .."-0"
+    end
+
+    if args['-e'] then
+        y = HEIGH-(y+h)
+        exp:rect_color(Def.COLOR_YELLOW, x, y, w, h, id)
+    end
+end
+
+print()
+print("===========================================")
+print("test finding...")
+test_find_rect{id="?", x=1500, y=500, w=80, h=80}
+test_find_rect{id="?", x=100, y=100, w=80, h=80}
+test_find_rect{id="?", x=280, y=580, w=80, h=80}
+
+print()
+if args['-e'] then
+    local Export = require "export"
+    Export.dump_exp(exp, "test_find_")
+end
+
 print("Done.")
