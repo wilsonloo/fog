@@ -7,6 +7,6 @@ M.LU = "lu"
 M.LD = "ld"
 M.RU = "ru"
 M.RD = "rd"
-M.REGION_IDX_LIST = { LU, LD, RU, RD}
+M.REGION_IDX_LIST = { M.LU, M.LD, M.RU, M.RD}
 
 return M

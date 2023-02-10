@@ -28,6 +28,7 @@ local NODE_CAPACITY = 2
 local to_merge = false
 
 local logger = Logger.new()
+logger:disable_debug()
 
 local img_idx = 1
 local function do_export(tree)
@@ -116,13 +117,6 @@ function mt:split_region()
         logger:debugf("    re-add old: %d %d %d %d, id:%s", elem.x, elem.y, elem.w, elem.h, elem.id)
         self:add(elem.x, elem.y, elem.w, elem.h, elem.id)
     end
-
-    -- for _, region_idx in ipairs(Def.REGION_IDX_LIST) do
-    --     local r = self.children[region_idx]
-    --     if r then
-    --         r:check_full()
-    --     end
-    -- end
     logger:debug("spliting region done")
 
     do_export(tree)
@@ -150,20 +144,11 @@ function mt:_insert_region(x, y, w, h, id)
         h = h,
         id = id,
     }
-    self.merged = nil
     self:try_merge(elem)
     tinsert(self.list, elem)
-    if self.merged then
-        PrintR.print_r("merged:", self.list)
-    end
 
     logger:debug("    insert to list:", #self.list)
-    -- PrintR.print_r("info:", self)
-    if self:check_full() then
-        logger:debug("is full")
-        return
-    end
-    
+    self:check_full()
     if #self.list > NODE_CAPACITY then
         logger:debug("capacity limited, spliting ...")
         self:split_region()
@@ -199,8 +184,6 @@ function mt:try_merge(new_rect)
     for k, e in ipairs(self.list) do
         local merged_rect = merge(e)
         if merged_rect then
-            print("merged")
-            self.merged = true
             tremove(self.list, k)
             new_rect.x = merged_rect.x
             new_rect.y = merged_rect.y
@@ -344,10 +327,8 @@ function mt:add(x, y, w, h, id)
         end
     end
 
-    if self:check_full() then
-        self.list = nil
-        self.children = nil
-    end
+    -- children 全部都满了，当前区域可以进行full
+    self:check_full()
 end
 
 
@@ -377,6 +358,13 @@ add_rects{
     {id="y", x=200, y=0, w=50, h=100},
     {id="x", x=400, y=400, w=100, h=100},
     {id="w", x=400, y=250, w=100, h=50},
+}
+
+-- 合并并向上合并
+add_rects{
+    {id="v", x=250, y=0, w=50, h=100},
+    {id="u", x=400, y=200, w=100, h=50},
+    {id="t", x=300, y=0, w=200, h=200},
 }
 
 PrintR.print_r(tree)
