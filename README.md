@@ -79,3 +79,27 @@
 
 * 添加t后,四个区域都为full，再次向上合并:
   ![./doc/31_添加t后向上合并.png](./doc/31_添加t后向上合并.png)
+
+## 如何使用：
+* 纯测试产生四叉树：
+```sh
+lua ./test.lua
+```
+
+* 打印调试性log, 启动 -d 选项
+```sh
+lua ./test.lua -d
+```
+
+* 导出调试性图片, 启动 -e 选项，该导出需要依赖 imgexporter 库
+```sh
+make
+lua ./test.lua -e
+```
+这一步骤会将每个步骤的这个树导出json文件到 output目录（假定是/data/output）;
+第二步，git@github.com:wilsonloo/imggenerater.git
+然后执行以下指令即可在同一个output目录看到对应的图片：
+```sh
+cd imggenerater
+python3 generate.py /data/output
+```

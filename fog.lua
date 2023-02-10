@@ -10,32 +10,27 @@ local mmin = math.min
 local tinsert = table.insert
 local tremove = table.remove
 
-local a = {id='a', x=100, y=600, w=100, h=100}
-local b = {id='b', x=200, y=100, w=100, h=700}
-local c = {id='c', x=300, y=600, w=100, h=100}
-local d = {id='d', x=300, y=200, w=100, h=300}
-local e = {id='e', x=400, y=300, w=100, h=100}
-local f = {id='f', x=300, y=900, w=200, h=100}
-local g = {id='g', x=600, y=1200, w=200, h=100}
-local map = {a, b, c, d, e, f, g}
-
-local WIDTH = 2000
-local HEIGH = 2000
-
 -- 每个节点最多容纳多少个矩形
 local NODE_CAPACITY = 2
 
-local to_merge = false
-
-local logger = Logger.new()
-logger:disable_debug()
-
 local img_idx = 1
 local function do_export(tree)
+    local root = nil
+    local v = tree
+    while v ~= nil do
+        if v.is_root then
+            root = v
+            break
+        end
+        v = v.parent
+    end
+
     local export = require "export"
-    export(tree, img_idx..".json", "title")
+    export(root, img_idx..".json", "title")
     img_idx = img_idx + 1
 end
+
+local logger = Logger.new()
 
 local mt = {}
 mt.__index = mt
@@ -54,8 +49,6 @@ local function create_region(x, y, w, h)
     return setmetatable(node, mt)
 end
 
-local tree = create_region(0, 0, WIDTH, HEIGH)
-
 function mt:_fetch_region(region_idx, x, y, w, h)
     if not(self.children) then
         self.children = {}
@@ -66,6 +59,7 @@ function mt:_fetch_region(region_idx, x, y, w, h)
         r = create_region(x, y, w, h)
         r.region_idx = region_idx
         self.children[region_idx] = r
+        r.parent = self
     end
     return r
 end
@@ -119,7 +113,7 @@ function mt:split_region()
     end
     logger:debug("spliting region done")
 
-    do_export(tree)
+    do_export(self)
 end
 
 function mt:_insert_region(x, y, w, h, id)
@@ -149,17 +143,14 @@ function mt:_insert_region(x, y, w, h, id)
 
     logger:debug("    insert to list:", #self.list)
     self:check_full()
-    if #self.list > NODE_CAPACITY then
+
+    if self.list and #self.list > NODE_CAPACITY then
         logger:debug("capacity limited, spliting ...")
         self:split_region()
     end
 end
 
 function mt:try_merge(new_rect)
-    if not(to_merge) then
-        return
-    end
-
     local function merge(e)
         if new_rect.h == e.h then
             if new_rect.x == e.x + e.w then
@@ -331,41 +322,33 @@ function mt:add(x, y, w, h, id)
     self:check_full()
 end
 
-
-local function add_rects(list)
+function mt:add_rects(list)
     for k, v in ipairs(list) do
-        tree:add(v.x, v.y, v.w, v.h, v.id)
-        do_export(tree)
+        self:add(v.x, v.y, v.w, v.h, v.id)
+
+        if self.export_debug_img then
+            do_export(self)
+        end
     end
 end
 
-to_merge = true
+local M = {}
 
--- 初始矩形列表
-add_rects(map)
+function M.new(width, heigh, options)
+    local tree = create_region(0, 0, width, heigh)
+    tree.is_root = true
 
--- 合并区域内的矩形
-add_rects{
-    {id="A", x=1900, y=1900, w=100, h=100}, -- 添加到空白区域
-    {id="B", x=1900, y=1800, w=100, h=100}, -- 添加到已有一个元素的区域，可以合并
-    {id="C", x=600, y=1300, w=100, h=100},  -- 添加到已有一个元素的区域，不可合并
-    {id="D", x=700, y=1300, w=100, h=100},  -- 添加到已有两个元素的区域，可以连锁合并
-}
+    logger:disable_debug()
+    if options then
+        if options['-e'] then
+            tree.export_debug_img = true
+        end
+        if options['-d'] then
+            logger:enable_debug()
+        end
+    end
+    return tree
+end
 
--- 合并满一个区域
-add_rects{
-    {id="z", x=0, y=0, w=200, h=500},
-    {id="y", x=200, y=0, w=50, h=100},
-    {id="x", x=400, y=400, w=100, h=100},
-    {id="w", x=400, y=250, w=100, h=50},
-}
+return M
 
--- 合并并向上合并
-add_rects{
-    {id="v", x=250, y=0, w=50, h=100},
-    {id="u", x=400, y=200, w=100, h=50},
-    {id="t", x=300, y=0, w=200, h=200},
-}
-
-PrintR.print_r(tree)
-print("Done.")
