@@ -81,25 +81,45 @@
   ![./doc/31_添加t后向上合并.png](./doc/31_添加t后向上合并.png)
 
 ## 如何使用：
+* 主要文件为 fog.lua 模块文件， 设计以下几个函数：
+  1. Fog.new(WIDTH, HEIGH, args)  
+    WIDTH：地图宽度  
+    HEIGH: 地图高度  
+    args: 命令行参数列表，主要是-d -e 参数（下面有测试用例说明)  
+
+  2. fog:add_rects(矩形列表)  
+    矩形元素格式为  
+    ```lua
+      {
+        id = 字符串id,  
+        x = ?, y = ?, w = ?, h = ?  
+      }
+    ``` 
+  3. fog:check_collision(x, y, w, h)  
+    检测矩形(x,y,w,h) 是否在地图中发生了碰撞
+
 * 纯测试产生四叉树：
-```sh
-lua ./test.lua
-```
+  ```sh
+  lua ./test.lua
+  ```
 
 * 打印调试性log, 启动 -d 选项
-```sh
-lua ./test.lua -d
-```
+  ```sh
+  lua ./test.lua -d
+  ```
 
 * 导出调试性图片, 启动 -e 选项，该导出需要依赖 imgexporter 库
-```sh
-make
-lua ./test.lua -e
-```
-这一步骤会将每个步骤的这个树导出json文件到 output目录（假定是/data/output）;
-第二步，git@github.com:wilsonloo/imggenerater.git
-然后执行以下指令即可在同一个output目录看到对应的图片：
-```sh
-cd imggenerater
-python3 generate.py /data/output
-```
+  ```sh
+  make
+  lua ./test.lua -e
+  ```
+  这一步骤会将每个步骤的这个树导出json文件到 output目录（假定是/data/output）;
+  第二步，git@github.com:wilsonloo/imggenerater.git
+  然后执行以下指令即可在同一个output目录看到对应的图片：
+  ```sh
+  cd imggenerater
+  python3 generate.py /data/output
+  ```
+
+* 碰撞检测，下图三个黄色区域为测试格子，其中"?-1"标记的格子发生了碰撞， “?-0”标记的格子没有发生碰撞：
+  ![./doc/32_测试碰撞.png](./doc/32_测试碰撞.png)
