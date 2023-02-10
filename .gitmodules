@@ -1,3 +1,3 @@
 [submodule "3rd/imgexporter"]
 	path = 3rd/imgexporter
-	url = git@localhost:wilson/lov2d_image_exporter.git
+	url = git@github.com:wilsonloo/imgexporter.git	
